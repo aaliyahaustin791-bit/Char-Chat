@@ -149,3 +149,38 @@ function injectUI() {
         $('#charChat-container').hide();
     });
 }
+
+async function handlePhoneSend(userText) {
+    const context = window.SillyTavern.getContext();
+    const charName = context.characters[context.characterId]?.name || 'the character';
+
+    // 1. Save user's text to our chat_metadata (from step 2)
+    savePhoneMessage('user', userText);
+    refreshPhoneUI();
+
+    // 2. Show a "Typing..." indicator in your UI
+    showPhoneTypingIndicator();
+
+    // 3. Build the instruction prompt
+    let prompt = `\n\n[System Note: ${charName} is currently texting the user on a mobile phone.\n`;
+    prompt += `The user just sent this SMS: "${userText}"\n`;
+    prompt += `Write a short, realistic text message reply from ${charName}. DO NOT use roleplay asterisks. ONLY output the exact text message they send back.]`;
+
+    try {
+        // 4. Trigger silent generation in SillyTavern
+        // This sends the main chat history + our prompt to literouter.com
+        const aiReply = await window.generateQuietPrompt(prompt);
+
+        // 5. Clean up the response (remove quotes if the AI added them)
+        const cleanReply = aiReply.replace(/^["']|["']$/g, '').trim();
+
+        // 6. Save the AI's reply and update UI
+        savePhoneMessage('character', cleanReply);
+        hidePhoneTypingIndicator();
+        refreshPhoneUI();
+
+    } catch (error) {
+        console.error("[CharChat] API Error:", error);
+        hidePhoneTypingIndicator();
+    }
+}
