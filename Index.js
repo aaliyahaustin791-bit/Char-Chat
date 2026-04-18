@@ -91,3 +91,33 @@ function savePhoneMessage(senderRole, text) {
         context.saveChat();
     }
 }
+
+function refreshPhoneUI() {
+    const data = getPhoneData(); // From our previous step
+    if (!data) {
+        // Hide or clear phone screen, no chat active
+        $('#charChat-message-container').empty();
+        return;
+    }
+    
+    // Render the messages
+    console.log(`[CharChat] Loaded ${data.messages.length} messages for ${data.contactName}`);
+    // ... UI rendering logic here ...
+}
+
+// Register listeners during your initExtension() function
+function registerListeners() {
+    // window.eventSource and window.event_types are standard ST globals
+    const eventSource = window.eventSource;
+    const event_types = window.event_types;
+
+    if (eventSource && event_types) {
+        // Refresh when switching characters/chats
+        eventSource.on(event_types.CHAT_CHANGED, refreshPhoneUI);
+        
+        // Optional: Listen to standard chat messages to trigger phone events
+        // eventSource.on(event_types.MESSAGE_RECEIVED, handleMainChatMessage);
+    } else {
+        console.error("[CharChat] Event source not found!");
+    }
+}
