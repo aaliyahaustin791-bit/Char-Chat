@@ -121,3 +121,31 @@ function registerListeners() {
         console.error("[CharChat] Event source not found!");
     }
 }
+
+function injectUI() {
+    if ($('#charChat-container').length) return; // Prevent duplicates
+
+    const phoneHtml = `
+        <div id="charChat-container">
+            <div class="charChat-header">
+                <i class="fa-solid fa-chevron-left"></i>
+                <span id="charChat-contact-name">Contact</span>
+                <i id="charChat-close" class="fa-solid fa-xmark" style="cursor:pointer;"></i>
+            </div>
+            <div id="charChat-messages"></div>
+            <div class="charChat-input-area">
+                <textarea id="charChat-input" placeholder="Text message..." rows="1"></textarea>
+                <div id="charChat-send" class="menu_button">
+                    <i class="fa-solid fa-paper-plane"></i>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    $('body').append(phoneHtml);
+
+    // Close button event
+    $('#charChat-close').on('click', () => {
+        $('#charChat-container').hide();
+    });
+}
