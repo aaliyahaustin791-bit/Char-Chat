@@ -1,186 +1,130 @@
-// Char Chat - Custom Phone Extension
-// Built using the global context pattern to avoid vanishing bugs
-
 (function () {
     'use strict';
-
     const MODULE_NAME = 'CharChat';
 
-    // Safely get extension base URL
-    const scripts = document.querySelectorAll('script[src*="index.js"]');
-    let BASE_URL = '';
-    for (const script of scripts) {
-        if (script.src.includes('CharChat') || script.src.includes('char-chat')) {
-            try {
-                const urlObj = new URL(script.src, window.location.href);
-                BASE_URL = urlObj.origin + urlObj.pathname.split('/').slice(0, -1).join('/');
-            } catch (e) {
-                BASE_URL = script.src.split('?')[0].split('/').slice(0, -1).join('/');
-            }
-            break;
-        }
-    }
-    if (!BASE_URL) {
-        // Fallback assuming standard installation path
-        BASE_URL = '/scripts/extensions/third-party/CharChat';
-    }
-
-    console.log(`[${MODULE_NAME}] Initializing from ${BASE_URL}`);
-
-    // Main initialization function
-    async function initExtension() {
-        // Access SillyTavern's global context securely
-        // window.SillyTavern is the safest way to get ST internals in an IIFE
+    // 1. Data Storage (Metadata)
+    function getPhoneData() {
         const context = window.SillyTavern?.getContext?.();
-        if (!context) {
-            console.error(`[${MODULE_NAME}] Failed to get SillyTavern context!`);
-            return;
-        }
-
-        console.log(`[${MODULE_NAME}] Context loaded successfully.`, context);
+        if (!context?.chatId) return null;
         
-        // Example: Add a button to the extensions menu
-        /*
-        const button = $(`<div id="charChatBtn" class="fa-solid fa-mobile-screen-button menu_button" title="Char Chat"></div>`);
-        button.on('click', () => {
-            console.log('Phone UI Opened!');
-        });
-        $('#extensions_settings').append(button);
-        */
+        if (!context.chatMetadata.charChat) {
+            context.chatMetadata.charChat = {
+                messages: [],
+                contactName: context.characters[context.characterId]?.name || 'Unknown'
+            };
+        }
+        return context.chatMetadata.charChat;
     }
 
-    // Wait for SillyTavern to finish loading DOM
+    function savePhoneMessage(role, text) {
+        const context = window.SillyTavern.getContext();
+        const data = getPhoneData();
+        if (!data) return;
+        
+        data.messages.push({ role, text, timestamp: new Date().toISOString() });
+        if (typeof context.saveChat === 'function') context.saveChat();
+    }
+
+    // 2. UI Updates
+    function refreshPhoneUI() {
+        const data = getPhoneData();
+        const $messages = $('#charChat-messages');
+        $messages.empty();
+        if (!data) return;
+        
+        $('#charChat-contact-name').text(data.contactName);
+        data.messages.forEach(msg => {
+            const cssClass = msg.role === 'user' ? 'user' : 'char';
+            $messages.append(`<div class="charChat-bubble ${cssClass}">${msg.text}</div>`);
+        });
+        $messages.scrollTop($messages[0].scrollHeight);
+    }
+
+    // 3. AI Generation Logic
+    async function handlePhoneSend() {
+        const $input = $('#charChat-input');
+        const userText = $input.val().trim();
+        if (!userText) return;
+        
+        $input.val(''); // Clear input
+        savePhoneMessage('user', userText);
+        refreshPhoneUI();
+
+        const context = window.SillyTavern.getContext();
+        const charName = context.characters[context.characterId]?.name || 'the character';
+        
+        // Show fake typing indicator
+        $('#charChat-messages').append(`<div id="charChat-typing" class="charChat-bubble char">Typing...</div>`);
+        $('#charChat-messages').scrollTop($('#charChat-messages')[0].scrollHeight);
+
+        // Build prompt for API
+        let prompt = `\n\n[System Note: ${charName} is currently texting the user on a mobile phone.\n`;
+        prompt += `The user just sent this SMS: "${userText}"\n`;
+        prompt += `Write a short, realistic text message reply from ${charName}. DO NOT use roleplay asterisks. ONLY output the exact text message they send back.]`;
+
+        try {
+            // Silent generation
+            const aiReply = await window.generateQuietPrompt(prompt);
+            const cleanReply = aiReply.replace(/^["']|["']$/g, '').trim(); // Remove quotes
+            
+            $('#charChat-typing').remove();
+            savePhoneMessage('character', cleanReply);
+            refreshPhoneUI();
+        } catch (error) {
+            console.error(`[${MODULE_NAME}] API Error:`, error);
+            $('#charChat-typing').remove();
+        }
+    }
+
+    // 4. UI Injection & Setup
+    function injectUI() {
+        if ($('#charChat-container').length) return;
+        const phoneHtml = `
+            <div id="charChat-container">
+                <div class="charChat-header">
+                    <span id="charChat-contact-name">Contact</span>
+                    <i id="charChat-close" class="fa-solid fa-xmark" style="cursor:pointer; float:right;"></i>
+                </div>
+                <div id="charChat-messages"></div>
+                <div class="charChat-input-area">
+                    <textarea id="charChat-input" placeholder="Text message..."></textarea>
+                    <div id="charChat-send" class="menu_button"><i class="fa-solid fa-paper-plane"></i></div>
+                </div>
+            </div>
+        `;
+        $('body').append(phoneHtml);
+
+        // Bind UI Events
+        $('#charChat-close').on('click', () => $('#charChat-container').hide());
+        $('#charChat-send').on('click', handlePhoneSend);
+        $('#charChat-input').on('keypress', function (e) {
+            if (e.which === 13 && !e.shiftKey) {
+                e.preventDefault();
+                handlePhoneSend();
+            }
+        });
+    }
+
+    // 5. Extension Init
+    function initExtension() {
+        injectUI();
+        
+        // Add toggle button to ST extensions menu
+        const btnHtml = `<div id="charChat-open-btn" class="menu_button fa-solid fa-mobile-screen-button" title="Open Char Chat"></div>`;
+        $('#extensions_settings').append(btnHtml);
+        $('#charChat-open-btn').on('click', () => {
+            $('#charChat-container').toggle();
+            refreshPhoneUI();
+        });
+
+        // Listen for chat changes to refresh data
+        if (window.eventSource && window.event_types) {
+            window.eventSource.on(window.event_types.CHAT_CHANGED, refreshPhoneUI);
+        }
+    }
+
+    // Wait for ST to load
     jQuery(document).ready(function () {
         initExtension();
     });
-
 })();
-
-function getPhoneData() {
-    const context = window.SillyTavern.getContext();
-    
-    // If no chat is active, return null
-    if (!context.chatId) return null;
-
-    // Initialize our extension's namespace in this chat's metadata
-    if (!context.chatMetadata.charChat) {
-        context.chatMetadata.charChat = {
-            messages: [],
-            unreadCount: 0,
-            contactName: context.characters[context.characterId]?.name || 'Unknown'
-        };
-    }
-    return context.chatMetadata.charChat;
-}
-
-function savePhoneMessage(senderRole, text) {
-    const context = window.SillyTavern.getContext();
-    const data = getPhoneData();
-    if (!data) return;
-
-    // Add the new text message
-    data.messages.push({
-        id: Date.now(),
-        role: senderRole, // 'user' or 'character'
-        text: text,
-        timestamp: new Date().toISOString()
-    });
-
-    // Force SillyTavern to write the updated metadata to disk
-    if (typeof context.saveChat === 'function') {
-        context.saveChat();
-    }
-}
-
-function refreshPhoneUI() {
-    const data = getPhoneData(); // From our previous step
-    if (!data) {
-        // Hide or clear phone screen, no chat active
-        $('#charChat-message-container').empty();
-        return;
-    }
-    
-    // Render the messages
-    console.log(`[CharChat] Loaded ${data.messages.length} messages for ${data.contactName}`);
-    // ... UI rendering logic here ...
-}
-
-// Register listeners during your initExtension() function
-function registerListeners() {
-    // window.eventSource and window.event_types are standard ST globals
-    const eventSource = window.eventSource;
-    const event_types = window.event_types;
-
-    if (eventSource && event_types) {
-        // Refresh when switching characters/chats
-        eventSource.on(event_types.CHAT_CHANGED, refreshPhoneUI);
-        
-        // Optional: Listen to standard chat messages to trigger phone events
-        // eventSource.on(event_types.MESSAGE_RECEIVED, handleMainChatMessage);
-    } else {
-        console.error("[CharChat] Event source not found!");
-    }
-}
-
-function injectUI() {
-    if ($('#charChat-container').length) return; // Prevent duplicates
-
-    const phoneHtml = `
-        <div id="charChat-container">
-            <div class="charChat-header">
-                <i class="fa-solid fa-chevron-left"></i>
-                <span id="charChat-contact-name">Contact</span>
-                <i id="charChat-close" class="fa-solid fa-xmark" style="cursor:pointer;"></i>
-            </div>
-            <div id="charChat-messages"></div>
-            <div class="charChat-input-area">
-                <textarea id="charChat-input" placeholder="Text message..." rows="1"></textarea>
-                <div id="charChat-send" class="menu_button">
-                    <i class="fa-solid fa-paper-plane"></i>
-                </div>
-            </div>
-        </div>
-    `;
-    
-    $('body').append(phoneHtml);
-
-    // Close button event
-    $('#charChat-close').on('click', () => {
-        $('#charChat-container').hide();
-    });
-}
-
-async function handlePhoneSend(userText) {
-    const context = window.SillyTavern.getContext();
-    const charName = context.characters[context.characterId]?.name || 'the character';
-
-    // 1. Save user's text to our chat_metadata (from step 2)
-    savePhoneMessage('user', userText);
-    refreshPhoneUI();
-
-    // 2. Show a "Typing..." indicator in your UI
-    showPhoneTypingIndicator();
-
-    // 3. Build the instruction prompt
-    let prompt = `\n\n[System Note: ${charName} is currently texting the user on a mobile phone.\n`;
-    prompt += `The user just sent this SMS: "${userText}"\n`;
-    prompt += `Write a short, realistic text message reply from ${charName}. DO NOT use roleplay asterisks. ONLY output the exact text message they send back.]`;
-
-    try {
-        // 4. Trigger silent generation in SillyTavern
-        // This sends the main chat history + our prompt to literouter.com
-        const aiReply = await window.generateQuietPrompt(prompt);
-
-        // 5. Clean up the response (remove quotes if the AI added them)
-        const cleanReply = aiReply.replace(/^["']|["']$/g, '').trim();
-
-        // 6. Save the AI's reply and update UI
-        savePhoneMessage('character', cleanReply);
-        hidePhoneTypingIndicator();
-        refreshPhoneUI();
-
-    } catch (error) {
-        console.error("[CharChat] API Error:", error);
-        hidePhoneTypingIndicator();
-    }
-}
