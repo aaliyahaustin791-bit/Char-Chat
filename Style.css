@@ -1,71 +1,91 @@
-/* Char Chat - Base Styles */
-
-/* Example Phone UI Container */
-#charChatUI {
+ /* Char Chat UI Layout */
+#charChat-container {
     display: none;
     position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 350px;
-    height: 600px;
-    /* Uses ST's native CSS variables for seamless theme matching */
-    background: var(--SmartThemeBlurTintColor);
-    border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 12px;
-    z-index: 9999;
-    backdrop-filter: blur(var(--SmartThemeBlurStrength));
-    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-}
-
-.charChat-header {
-    padding: 10px;
-    border-bottom: 1px solid var(--SmartThemeBorderColor);
-    font-weight: bold;
-    text-align: center;
-    color: var(--SmartThemeBodyColor);
-}
-
-/* In style.css */
-#charChat-container {
-    display: none; /* Hidden by default */
-    position: fixed;
-    bottom: 80px; /* Above the ST chat input */
+    bottom: 80px;
     right: 20px;
     width: 320px;
     height: 500px;
     display: flex;
     flex-direction: column;
     
-    /* ST Native Variables */
     background-color: var(--SmartThemeBlurTintColor);
     backdrop-filter: blur(var(--SmartThemeBlurStrength));
     border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 10px;
+    border-radius: 12px;
     color: var(--SmartThemeBodyColor);
     z-index: 9999;
     box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    overflow: hidden;
+}
+
+.charChat-header {
+    padding: 12px;
+    background: rgba(0,0,0,0.2);
+    border-bottom: 1px solid var(--SmartThemeBorderColor);
+    font-weight: bold;
+    text-align: center;
 }
 
 #charChat-messages {
     flex-grow: 1;
     overflow-y: auto;
-    padding: 10px;
+    padding: 12px;
     display: flex;
     flex-direction: column;
     gap: 8px;
 }
 
-/* Message Bubbles */
 .charChat-bubble {
     max-width: 80%;
     padding: 8px 12px;
-    border-radius: 12px;
+    border-radius: 14px;
+    word-wrap: break-word;
 }
+
 .charChat-bubble.user {
     align-self: flex-end;
     background-color: var(--SmartThemeChatUserColor, #3a5b7c);
+    border-bottom-right-radius: 4px;
 }
+
 .charChat-bubble.char {
     align-self: flex-start;
     background-color: var(--SmartThemeChatCharColor, #4a4a4a);
+    border-bottom-left-radius: 4px;
 }
+
+#charChat-typing {
+    font-style: italic;
+    opacity: 0.7;
+}
+
+.charChat-input-area {
+    display: flex;
+    padding: 8px;
+    gap: 8px;
+    background: rgba(0,0,0,0.1);
+    border-top: 1px solid var(--SmartThemeBorderColor);
+}
+
+#charChat-input {
+    flex-grow: 1;
+    background: var(--SmartThemeQuoteColor);
+    color: var(--SmartThemeBodyColor);
+    border: 1px solid var(--SmartThemeBorderColor);
+    border-radius: 18px;
+    padding: 8px 12px;
+    resize: none;
+    height: 40px;
+    font-family: inherit;
+}
+
+#charChat-send {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+}   
