@@ -1,0 +1,8 @@
+{
+    "name": "Char Chat",
+    "author": "You",
+    "version": "1.0.0",
+    "description": "A custom phone interface extension for SillyTavern.",
+    "js": ["index.js"],
+    "css": ["style.css"]
+}
