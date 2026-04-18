@@ -55,3 +55,39 @@
     });
 
 })();
+
+function getPhoneData() {
+    const context = window.SillyTavern.getContext();
+    
+    // If no chat is active, return null
+    if (!context.chatId) return null;
+
+    // Initialize our extension's namespace in this chat's metadata
+    if (!context.chatMetadata.charChat) {
+        context.chatMetadata.charChat = {
+            messages: [],
+            unreadCount: 0,
+            contactName: context.characters[context.characterId]?.name || 'Unknown'
+        };
+    }
+    return context.chatMetadata.charChat;
+}
+
+function savePhoneMessage(senderRole, text) {
+    const context = window.SillyTavern.getContext();
+    const data = getPhoneData();
+    if (!data) return;
+
+    // Add the new text message
+    data.messages.push({
+        id: Date.now(),
+        role: senderRole, // 'user' or 'character'
+        text: text,
+        timestamp: new Date().toISOString()
+    });
+
+    // Force SillyTavern to write the updated metadata to disk
+    if (typeof context.saveChat === 'function') {
+        context.saveChat();
+    }
+}
