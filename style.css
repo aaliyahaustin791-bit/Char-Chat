@@ -1,27 +1,38 @@
- /* Char Chat UI Layout */
+/* Char Chat UI Layout - Mobile Centered */
 #charChat-container {
     display: none;
     position: fixed;
-    bottom: 80px;
-    right: 20px;
-    width: 320px;
-    height: 500px;
+    
+    /* Center perfectly on any screen */
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    
+    /* Responsive sizing */
+    width: 90vw;
+    max-width: 400px;
+    height: 70vh;
+    max-height: 800px;
+    
     display: flex;
     flex-direction: column;
     
+    /* Visuals */
     background-color: var(--SmartThemeBlurTintColor);
     backdrop-filter: blur(var(--SmartThemeBlurStrength));
     border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 12px;
+    border-radius: 16px;
     color: var(--SmartThemeBodyColor);
-    z-index: 9999;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    
+    /* Absolute maximum z-index so nothing hides it */
+    z-index: 2147483647;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     overflow: hidden;
 }
 
 .charChat-header {
     padding: 12px;
-    background: rgba(0,0,0,0.2);
+    background: rgba(0,0,0,0.3);
     border-bottom: 1px solid var(--SmartThemeBorderColor);
     font-weight: bold;
     text-align: center;
@@ -37,21 +48,22 @@
 }
 
 .charChat-bubble {
-    max-width: 80%;
-    padding: 8px 12px;
-    border-radius: 14px;
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 16px;
     word-wrap: break-word;
+    line-height: 1.4;
 }
 
 .charChat-bubble.user {
     align-self: flex-end;
-    background-color: var(--SmartThemeChatUserColor, #3a5b7c);
+    background-color: var(--SmartThemeChatUserColor, #2b5278);
     border-bottom-right-radius: 4px;
 }
 
 .charChat-bubble.char {
     align-self: flex-start;
-    background-color: var(--SmartThemeChatCharColor, #4a4a4a);
+    background-color: var(--SmartThemeChatCharColor, #3a3a3a);
     border-bottom-left-radius: 4px;
 }
 
@@ -62,9 +74,9 @@
 
 .charChat-input-area {
     display: flex;
-    padding: 8px;
-    gap: 8px;
-    background: rgba(0,0,0,0.1);
+    padding: 10px;
+    gap: 10px;
+    background: rgba(0,0,0,0.2);
     border-top: 1px solid var(--SmartThemeBorderColor);
 }
 
@@ -73,19 +85,21 @@
     background: var(--SmartThemeQuoteColor);
     color: var(--SmartThemeBodyColor);
     border: 1px solid var(--SmartThemeBorderColor);
-    border-radius: 18px;
-    padding: 8px 12px;
+    border-radius: 20px;
+    padding: 10px 15px;
     resize: none;
-    height: 40px;
+    height: 44px;
     font-family: inherit;
+    font-size: 16px; /* Prevents iOS auto-zoom */
 }
 
 #charChat-send {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
+    background: var(--SmartThemeChatUserColor, #2b5278);
     border-radius: 50%;
     cursor: pointer;
-}   
+}
