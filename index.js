@@ -85,7 +85,7 @@
     function injectUI() {
         if ($('#charChat-container').length) return;
         const phoneHtml = `
-            <div id="charChat-container">
+            <div id="charChat-container" style="display: none;">
                 <div class="charChat-header">
                     <span id="charChat-contact-name">Contact</span>
                     <i id="charChat-close" class="fa-solid fa-xmark" style="cursor:pointer; float:right;"></i>
