@@ -7,10 +7,13 @@
         const context = window.SillyTavern?.getContext?.();
         if (!context?.chatId) return null;
         
+        // SAFEGUARD: Ensure metadata object exists
+        if (!context.chatMetadata) context.chatMetadata = {};
+        
         if (!context.chatMetadata.charChat) {
             context.chatMetadata.charChat = {
                 messages: [],
-                contactName: context.characters[context.characterId]?.name || 'Unknown'
+                contactName: context.characters?.[context.characterId]?.name || 'Unknown'
             };
         }
         return context.chatMetadata.charChat;
@@ -30,7 +33,11 @@
         const data = getPhoneData();
         const $messages = $('#charChat-messages');
         $messages.empty();
-        if (!data) return;
+        
+        if (!data) {
+            $('#charChat-contact-name').text('No Chat Active');
+            return;
+        }
         
         $('#charChat-contact-name').text(data.contactName);
         data.messages.forEach(msg => {
@@ -46,26 +53,23 @@
         const userText = $input.val().trim();
         if (!userText) return;
         
-        $input.val(''); // Clear input
+        $input.val('');
         savePhoneMessage('user', userText);
         refreshPhoneUI();
 
         const context = window.SillyTavern.getContext();
-        const charName = context.characters[context.characterId]?.name || 'the character';
+        const charName = context.characters?.[context.characterId]?.name || 'the character';
         
-        // Show fake typing indicator
         $('#charChat-messages').append(`<div id="charChat-typing" class="charChat-bubble char">Typing...</div>`);
         $('#charChat-messages').scrollTop($('#charChat-messages')[0].scrollHeight);
 
-        // Build prompt for API
         let prompt = `\n\n[System Note: ${charName} is currently texting the user on a mobile phone.\n`;
         prompt += `The user just sent this SMS: "${userText}"\n`;
         prompt += `Write a short, realistic text message reply from ${charName}. DO NOT use roleplay asterisks. ONLY output the exact text message they send back.]`;
 
         try {
-            // Silent generation
             const aiReply = await window.generateQuietPrompt(prompt);
-            const cleanReply = aiReply.replace(/^["']|["']$/g, '').trim(); // Remove quotes
+            const cleanReply = aiReply.replace(/^["']|["']$/g, '').trim();
             
             $('#charChat-typing').remove();
             savePhoneMessage('character', cleanReply);
@@ -73,6 +77,7 @@
         } catch (error) {
             console.error(`[${MODULE_NAME}] API Error:`, error);
             $('#charChat-typing').remove();
+            toastr.error('Phone AI Error! Check console.');
         }
     }
 
@@ -94,7 +99,6 @@
         `;
         $('body').append(phoneHtml);
 
-        // Bind UI Events
         $('#charChat-close').on('click', () => $('#charChat-container').hide());
         $('#charChat-send').on('click', handlePhoneSend);
         $('#charChat-input').on('keypress', function (e) {
@@ -109,21 +113,34 @@
     function initExtension() {
         injectUI();
         
-        // Add toggle button to ST extensions menu
         const btnHtml = `<div id="charChat-open-btn" class="menu_button fa-solid fa-mobile-screen-button" title="Open Char Chat"></div>`;
         $('#extensions_settings').append(btnHtml);
+        
         $('#charChat-open-btn').on('click', () => {
-            $('#charChat-container').toggle();
-            refreshPhoneUI();
+            const $container = $('#charChat-container');
+            
+            // DEBUG NOTIFICATION
+            toastr.info("Toggling Char Chat...");
+
+            if ($container.length === 0) {
+                toastr.error("Error: Phone UI was not injected!");
+                return;
+            }
+
+            // PROPER FLEX TOGGLE
+            if ($container.css('display') === 'none') {
+                $container.css('display', 'flex');
+                refreshPhoneUI();
+            } else {
+                $container.hide();
+            }
         });
 
-        // Listen for chat changes to refresh data
         if (window.eventSource && window.event_types) {
             window.eventSource.on(window.event_types.CHAT_CHANGED, refreshPhoneUI);
         }
     }
 
-    // Wait for ST to load
     jQuery(document).ready(function () {
         initExtension();
     });
