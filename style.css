@@ -1,30 +1,23 @@
-/* Char Chat UI Layout - Mobile Centered */
 #charChat-container {
     display: none;
     position: fixed;
     
-    /* Center perfectly on any screen */
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    
-    /* Responsive sizing */
+    /* Safe Mobile Bottom-Sheet Layout */
+    bottom: 20px;
+    left: 5vw;
     width: 90vw;
-    max-width: 400px;
     height: 70vh;
-    max-height: 800px;
+    max-height: 600px;
     
     display: flex;
     flex-direction: column;
     
-    /* Visuals */
     background-color: var(--SmartThemeBlurTintColor);
     backdrop-filter: blur(var(--SmartThemeBlurStrength));
     border: 1px solid var(--SmartThemeBorderColor);
     border-radius: 16px;
     color: var(--SmartThemeBodyColor);
     
-    /* Absolute maximum z-index so nothing hides it */
     z-index: 2147483647;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     overflow: hidden;
