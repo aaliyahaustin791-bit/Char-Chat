@@ -1,15 +1,12 @@
 #charChat-container {
-    display: none;
     position: fixed;
-    
-    /* Safe Mobile Bottom-Sheet Layout */
     bottom: 20px;
     left: 5vw;
     width: 90vw;
     height: 70vh;
     max-height: 600px;
     
-    display: flex;
+    display: flex; /* Always flex when visible */
     flex-direction: column;
     
     background-color: var(--SmartThemeBlurTintColor);
@@ -18,9 +15,14 @@
     border-radius: 16px;
     color: var(--SmartThemeBodyColor);
     
-    z-index: 2147483647;
+    z-index: 99999;
     box-shadow: 0 10px 30px rgba(0,0,0,0.8);
     overflow: hidden;
+}
+
+/* The foolproof hider */
+.charChat-hidden {
+    display: none !important;
 }
 
 .charChat-header {
@@ -83,7 +85,7 @@
     resize: none;
     height: 44px;
     font-family: inherit;
-    font-size: 16px; /* Prevents iOS auto-zoom */
+    font-size: 16px;
 }
 
 #charChat-send {
