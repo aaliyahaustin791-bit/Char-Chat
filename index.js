@@ -109,37 +109,31 @@
         });
     }
 
-    // 5. Extension Init
-    function initExtension() {
+        function initExtension() {
         injectUI();
         
+        $('#charChat-open-btn').remove();
         const btnHtml = `<div id="charChat-open-btn" class="menu_button fa-solid fa-mobile-screen-button" title="Open Char Chat"></div>`;
         $('#extensions_settings').append(btnHtml);
         
-        $('#charChat-open-btn').on('click', () => {
-            const $container = $('#charChat-container');
+        // EVENT DELEGATION: Binds to document so it never dies
+        $(document).off('click', '#charChat-open-btn');
+        $(document).on('click', '#charChat-open-btn', () => {
+            // DIAGNOSTIC PULSE
+            toastr.success("Button clicked! Toggling UI...");
             
-            // DEBUG NOTIFICATION
-            toastr.info("Toggling Char Chat...");
-
-            if ($container.length === 0) {
-                toastr.error("Error: Phone UI was not injected!");
-                return;
-            }
-
-            // PROPER FLEX TOGGLE
-            if ($container.css('display') === 'none') {
-                $container.css('display', 'flex');
+            const $container = $('#charChat-container');
+            $container.toggleClass('charChat-hidden');
+            
+            if (!$container.hasClass('charChat-hidden')) {
                 refreshPhoneUI();
-            } else {
-                $container.hide();
             }
         });
 
         if (window.eventSource && window.event_types) {
             window.eventSource.on(window.event_types.CHAT_CHANGED, refreshPhoneUI);
         }
-    }
+      }
 
     jQuery(document).ready(function () {
         initExtension();
