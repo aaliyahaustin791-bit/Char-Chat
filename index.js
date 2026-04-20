@@ -109,42 +109,62 @@
         });
     }
 
-                function initExtension() {
+                    function initExtension() {
         injectUI();
         
-        $('#charChat-open-btn').remove();
-        const btnHtml = `<div id="charChat-open-btn" class="menu_button fa-solid fa-mobile-screen-button" title="Open Char Chat"></div>`;
-        $('#extensions_settings').append(btnHtml);
+        // Nuclear force: Re-inject every 2 seconds in case ST eats it
+        setInterval(() => {
+            if ($('#charChat-container').length === 0) {
+                injectUI();
+            }
+        }, 2000);
         
+        // EVENT DELEGATION
         $(document).off('click', '#charChat-open-btn').on('click', '#charChat-open-btn', () => {
             let $container = $('#charChat-container');
             
-            // Failsafe: Re-inject if ST accidentally wiped it
+            // Nuclear re-injection
             if ($container.length === 0) {
                 injectUI();
                 $container = $('#charChat-container');
             }
+            
+            // FORCE IT TO EXIST
+            if ($container.length === 0) {
+                toastr.error("NUCLEAR FAIL: Cannot create UI!");
+                return;
+            }
 
-            // BRUTE FORCE INLINE STYLES (Beats all CSS caches)
-            if ($container.css('display') === 'none') {
-                $container.removeClass('charChat-hidden');
-                // Force flex, force max layer priority
-                $container.css({
-                    'display': 'flex',
-                    'z-index': '2147483647'
-                });
-                refreshPhoneUI();
+            // DOM ANALYSIS
+            toastr.info("Container found! Position: " + $container.offset().top + ", Display: " + $container.css('display'));
+
+            // NUCLEAR FORCE VISIBLE
+            $container.removeClass('charChat-hidden');
+            $container.css({
+                'display': 'flex',
+                'z-index': '999999',
+                'position': 'fixed',
+                'top': '10%',
+                'left': '5%',
+                'width': '90%',
+                'height': '80%',
+                'background': 'red' // RED FLASH to prove it exists!
+            });
+            
+            // Final safety check
+            if ($container.css('display') !== 'flex') {
+                toastr.error("STILL HIDDEN! Check console for CSS conflicts.");
             } else {
-                $container.addClass('charChat-hidden');
-                $container.css('display', 'none');
+                toastr.success("NUCLEAR SUCCESS! Red phone should be visible!");
+                refreshPhoneUI();
             }
         });
 
         if (window.eventSource && window.event_types) {
             window.eventSource.on(window.event_types.CHAT_CHANGED, refreshPhoneUI);
         }
-                }
-
+                    }
+    
     jQuery(document).ready(function () {
         initExtension();
     });
