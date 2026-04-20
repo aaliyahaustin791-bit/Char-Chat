@@ -109,31 +109,41 @@
         });
     }
 
-        function initExtension() {
+            function initExtension() {
         injectUI();
         
         $('#charChat-open-btn').remove();
         const btnHtml = `<div id="charChat-open-btn" class="menu_button fa-solid fa-mobile-screen-button" title="Open Char Chat"></div>`;
         $('#extensions_settings').append(btnHtml);
         
-        // EVENT DELEGATION: Binds to document so it never dies
-        $(document).off('click', '#charChat-open-btn');
-        $(document).on('click', '#charChat-open-btn', () => {
-            // DIAGNOSTIC PULSE
-            toastr.success("Button clicked! Toggling UI...");
+        $(document).off('click', '#charChat-open-btn').on('click', '#charChat-open-btn', () => {
+            let $container = $('#charChat-container');
             
-            const $container = $('#charChat-container');
-            $container.toggleClass('charChat-hidden');
-            
-            if (!$container.hasClass('charChat-hidden')) {
+            // Failsafe: Re-inject if ST accidentally wiped it
+            if ($container.length === 0) {
+                injectUI();
+                $container = $('#charChat-container');
+            }
+
+            // BRUTE FORCE INLINE STYLES (Beats all CSS caches)
+            if ($container.css('display') === 'none') {
+                $container.removeClass('charChat-hidden');
+                // Force flex, force max layer priority
+                $container.css({
+                    'display': 'flex',
+                    'z-index': '2147483647'
+                });
                 refreshPhoneUI();
+            } else {
+                $container.addClass('charChat-hidden');
+                $container.css('display', 'none');
             }
         });
 
         if (window.eventSource && window.event_types) {
             window.eventSource.on(window.event_types.CHAT_CHANGED, refreshPhoneUI);
         }
-      }
+            }
 
     jQuery(document).ready(function () {
         initExtension();
