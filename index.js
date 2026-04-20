@@ -109,7 +109,7 @@
         });
     }
 
-            function initExtension() {
+                function initExtension() {
         injectUI();
         
         $('#charChat-open-btn').remove();
@@ -143,7 +143,7 @@
         if (window.eventSource && window.event_types) {
             window.eventSource.on(window.event_types.CHAT_CHANGED, refreshPhoneUI);
         }
-            }
+                }
 
     jQuery(document).ready(function () {
         initExtension();
